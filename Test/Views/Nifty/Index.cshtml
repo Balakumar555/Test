@@ -1,0 +1,161 @@
+@{
+    ViewData["Title"] = "NIFTY 50 Live Signal";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/nifty.css" asp-append-version="true" />
+}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Top header bar
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="nifty-header">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div>
+            <span class="nifty-index-label">NIFTY 50</span>
+            <span class="nifty-exchange-label">NSE &middot; 1-Min Delayed</span>
+        </div>
+        <div class="nifty-current-price-block">
+            <span id="currentPrice" class="nifty-current-price">Loading&hellip;</span>
+            <span id="priceChange" class="nifty-price-change"></span>
+        </div>
+        <!-- Bias badge -->
+        <div id="biasBadge" class="bias-badge bias-neutral">NEUTRAL</div>
+        <div class="ms-auto nifty-refresh-info">
+            <span class="refresh-dot" id="refreshDot"></span>
+            Auto-refresh every 30s &nbsp;|&nbsp; Last updated: <span id="lastUpdated">—</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Stats row
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="nifty-stats-row">
+    <div class="stat-card">
+        <span class="stat-label">PDH</span>
+        <span class="stat-value stat-danger" id="statPDH">—</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">PDC</span>
+        <span class="stat-value stat-warning" id="statPDC">—</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">PDL</span>
+        <span class="stat-value stat-success" id="statPDL">—</span>
+    </div>
+    <div class="stat-divider d-none d-md-block"></div>
+    <div class="stat-card">
+        <span class="stat-label">Prev Day</span>
+        <span class="stat-value" id="statPrevDate">—</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Today High</span>
+        <span class="stat-value stat-info" id="statCDH">—</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Today Low</span>
+        <span class="stat-value stat-info" id="statCDL">—</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Signals Today</span>
+        <span class="stat-value" id="statSignals">0 / 3</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Error banner
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="errorBanner" class="nifty-error-banner d-none" role="alert">
+    <strong>Data unavailable:</strong> <span id="errorMsg"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Main two-column layout: chart | signal panel
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="nifty-main-layout">
+
+    <!-- ── Left: Chart ────────────────────────────────────────── -->
+    <div class="nifty-chart-col">
+        <div class="nifty-chart-wrapper">
+            <div id="chartLoading" class="chart-loading">
+                <div class="spinner-border" style="color:#26a69a;" role="status">
+                    <span class="visually-hidden">Loading…</span>
+                </div>
+                <span style="color:#888;margin-left:12px;">Fetching live market data…</span>
+            </div>
+            <div id="chartContainer" style="width:100%;height:100%;"></div>
+        </div>
+        <!-- Legend -->
+        <div class="nifty-legend">
+            <span class="legend-item"><span class="legend-dot up-dot"></span>Bullish</span>
+            <span class="legend-item"><span class="legend-dot down-dot"></span>Bearish</span>
+            <span class="legend-item"><span class="legend-line pdh-line-swatch"></span>PDH</span>
+            <span class="legend-item"><span class="legend-line pdc-line-swatch"></span>PDC</span>
+            <span class="legend-item"><span class="legend-line pdl-line-swatch"></span>PDL</span>
+            <span class="legend-item legend-hint">Scroll to zoom &middot; Drag to pan</span>
+        </div>
+    </div>
+
+    <!-- ── Right: Signal Panel ────────────────────────────────── -->
+    <div class="signal-panel" id="signalPanel">
+
+        <!-- Section: Bias + Wick info -->
+        <div class="sp-section">
+            <div class="sp-title">DAILY BIAS</div>
+            <div id="spBias" class="sp-bias-neutral">NEUTRAL</div>
+            <div class="sp-wick-row">
+                <span class="sp-wick-label">Upper Wick</span>
+                <span id="spUpperWick" class="sp-wick-val">—</span>
+            </div>
+            <div class="sp-wick-row">
+                <span class="sp-wick-label">Lower Wick</span>
+                <span id="spLowerWick" class="sp-wick-val">—</span>
+            </div>
+        </div>
+
+        <!-- Section: Key levels -->
+        <div class="sp-section">
+            <div class="sp-title">KEY LEVELS</div>
+            <div class="sp-level-row">
+                <span class="sp-level-tag pdh-tag">PDH</span>
+                <span id="spPDH" class="sp-level-px">—</span>
+            </div>
+            <div class="sp-level-row">
+                <span class="sp-level-tag pdc-tag">PDC</span>
+                <span id="spPDC" class="sp-level-px">—</span>
+            </div>
+            <div class="sp-level-row">
+                <span class="sp-level-tag pdl-tag">PDL</span>
+                <span id="spPDL" class="sp-level-px">—</span>
+            </div>
+        </div>
+
+        <!-- Section: Signal status (state machine) -->
+        <div class="sp-section">
+            <div class="sp-title">SIGNAL STATUS</div>
+            <div id="spStatus" class="sp-status-msg">Initialising…</div>
+            <div id="spNextCond" class="sp-next-cond"></div>
+        </div>
+
+        <!-- Section: Last event -->
+        <div class="sp-section">
+            <div class="sp-title">LAST EVENT</div>
+            <div id="spLastEvent" class="sp-last-event">—</div>
+            <div id="spLastEventTime" class="sp-last-event-time"></div>
+        </div>
+
+        <!-- Section: Active signal card (hidden until signal fires) -->
+        <div id="spSignalCard" class="sp-signal-card sp-signal-none">
+            <div id="spSignalCardHeader" class="sp-signal-header">NO SIGNAL YET</div>
+            <div id="spSignalCardBody" class="sp-signal-body"></div>
+        </div>
+
+    </div><!-- /signal-panel -->
+
+</div><!-- /nifty-main-layout -->
+
+@section Scripts {
+    <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="~/js/nifty-chart.js" asp-append-version="true"></script>
+}

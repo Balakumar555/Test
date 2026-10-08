@@ -1,0 +1,25 @@
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+# Build output
+**/bin/
+**/obj/
+
+# .NET
+*.dll
+*.exe
+*.pdb
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets (never commit)
+**/appsettings.*.json
+!**/appsettings.json

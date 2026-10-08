@@ -1,0 +1,216 @@
+/* ═══════════════════════════════════════════════════════════════════
+   nifty.css  –  NIFTY 50 Live Signal Dashboard
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Base ────────────────────────────────────────────────────────── */
+body {
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
+}
+.navbar  { background: #161b22 !important; border-bottom: 1px solid #30363d !important; }
+.navbar-brand, .nav-link { color: #c9d1d9 !important; }
+footer.footer { background: #161b22 !important; border-top: 1px solid #30363d !important; color: #8b949e !important; }
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.nifty-header {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 16px;
+}
+.nifty-index-label  { font-weight: 700; font-size: 1.1rem; color: #f0f6fc; }
+.nifty-exchange-label { font-size: .72rem; color: #8b949e; margin-left: 8px; }
+
+.nifty-current-price-block { display: flex; align-items: baseline; gap: 10px; }
+.nifty-current-price {
+    font-size: 1.5rem; font-weight: 700;
+    font-family: Consolas, monospace; color: #e6edf3;
+}
+.nifty-price-change { font-size: .85rem; font-family: Consolas, monospace; }
+
+.nifty-refresh-info { font-size: .72rem; color: #8b949e; }
+
+/* Price flash animations */
+@keyframes flashUp   { 0%,100%{color:#e6edf3} 50%{color:#26a69a} }
+@keyframes flashDown { 0%,100%{color:#e6edf3} 50%{color:#ef5350} }
+.price-flash-up   { animation: flashUp   .5s ease; }
+.price-flash-down { animation: flashDown .5s ease; }
+
+/* Refresh dot */
+.refresh-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#26a69a; margin-right:4px; }
+@keyframes dotPulse { 0%{opacity:1} 50%{opacity:.2} 100%{opacity:1} }
+.dot-pulse { animation: dotPulse .6s ease; }
+
+/* ── Bias badge (header) ─────────────────────────────────────────── */
+.bias-badge {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+}
+.bias-bullish { background: rgba(38,166,154,.18); color: #26a69a; border: 1px solid #26a69a; }
+.bias-bearish { background: rgba(239, 83, 80,.18); color: #ef5350; border: 1px solid #ef5350; }
+.bias-neutral { background: rgba(139,148,158,.15); color: #8b949e; border: 1px solid #30363d; }
+
+/* ── Stats row ───────────────────────────────────────────────────── */
+.nifty-stats-row {
+    display: flex; flex-wrap: wrap; gap: 0;
+    background: #161b22; border-bottom: 1px solid #30363d;
+    padding: 6px 16px;
+}
+.stat-card { padding: 4px 14px; }
+.stat-label { display: block; font-size: .62rem; text-transform: uppercase; letter-spacing: .07em; color: #8b949e; }
+.stat-value { display: block; font-size: .95rem; font-weight: 700; font-family: Consolas,monospace; }
+.stat-danger  { color: #ef5350; }
+.stat-success { color: #26a69a; }
+.stat-warning { color: #ffc107; }
+.stat-info    { color: #58a6ff; }
+.stat-divider { width: 1px; background: #30363d; margin: 4px 6px; }
+
+/* ── Error banner ────────────────────────────────────────────────── */
+.nifty-error-banner {
+    background: #1f1117; border: 1px solid #6e2828;
+    color: #f85149; border-radius: 6px;
+    padding: 10px 16px; margin: 8px 16px; font-size: .85rem;
+}
+
+/* ── Main two-column layout ──────────────────────────────────────── */
+.nifty-main-layout {
+    display: flex;
+    gap: 0;
+    height: calc(100vh - 148px);   /* fill remaining viewport */
+    overflow: hidden;
+}
+
+/* ── Chart column ────────────────────────────────────────────────── */
+.nifty-chart-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nifty-chart-wrapper {
+    flex: 1 1 0;
+    position: relative;
+    background: #16181f;
+    border-right: 1px solid #30363d;
+}
+
+.chart-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #16181f; z-index: 10;
+}
+
+/* Legend below chart */
+.nifty-legend {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 6px 16px;
+    background: #161b22; border-top: 1px solid #30363d; border-right: 1px solid #30363d;
+    font-size: .72rem; color: #8b949e;
+}
+.legend-item   { display: flex; align-items: center; gap: 5px; }
+.legend-dot    { width: 8px; height: 8px; border-radius: 50%; }
+.up-dot        { background: #26a69a; }
+.down-dot      { background: #ef5350; }
+.legend-line   { display: inline-block; width: 18px; height: 2px; }
+.pdh-line-swatch { background: #ef5350; }
+.pdc-line-swatch { background: #ffc107; }
+.pdl-line-swatch { background: #26a69a; }
+.legend-hint   { color: #555e6d; }
+
+/* ── Signal panel ────────────────────────────────────────────────── */
+.signal-panel {
+    width: 270px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    background: #161b22;
+    border-left: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 16px;
+}
+
+.sp-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid #21262d;
+}
+
+.sp-title {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #8b949e;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Bias in panel */
+.sp-bias-bullish { font-size: 1.1rem; font-weight: 700; color: #26a69a; }
+.sp-bias-bearish { font-size: 1.1rem; font-weight: 700; color: #ef5350; }
+.sp-bias-neutral { font-size: 1.1rem; font-weight: 700; color: #8b949e; }
+
+/* Wick rows */
+.sp-wick-row    { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+.sp-wick-label  { font-size: .72rem; color: #8b949e; }
+.sp-wick-val    { font-size: .82rem; font-family: Consolas,monospace; color: #c9d1d9; }
+
+/* Level rows */
+.sp-level-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.sp-level-tag {
+    font-size: .62rem; font-weight: 700; letter-spacing: .06em;
+    padding: 1px 7px; border-radius: 4px; white-space: nowrap;
+}
+.pdh-tag { background: rgba(239, 83,80,.2); color: #ef5350; border: 1px solid #ef5350; }
+.pdc-tag { background: rgba(255,193, 7,.15); color: #ffc107; border: 1px solid #ffc107; }
+.pdl-tag { background: rgba(38,166,154,.2); color: #26a69a; border: 1px solid #26a69a; }
+.sp-level-px { font-family: Consolas,monospace; font-size: .9rem; font-weight: 600; color: #e6edf3; }
+
+/* Status */
+.sp-status-msg  { font-size: .8rem; color: #c9d1d9; font-weight: 500; line-height: 1.4; }
+.sp-next-cond   { font-size: .72rem; color: #8b949e; margin-top: 5px; line-height: 1.4; }
+
+/* Last event */
+.sp-last-event      { font-size: .78rem; color: #c9d1d9; line-height: 1.4; }
+.sp-last-event-time { font-size: .7rem;  color: #8b949e; margin-top: 3px; }
+
+/* Signal card */
+.sp-signal-card {
+    margin: 10px 10px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #30363d;
+}
+
+.sp-signal-none   { border-color: #30363d; }
+.sp-signal-buy    { border-color: #26a69a; }
+.sp-signal-sell   { border-color: #ef5350; }
+
+.sp-signal-header {
+    padding: 8px 12px;
+    font-weight: 700; font-size: .82rem; letter-spacing: .05em;
+}
+.sp-signal-none  .sp-signal-header { background: #21262d; color: #6e7681; }
+.sp-signal-buy   .sp-signal-header { background: rgba(38,166,154,.2); color: #26a69a; }
+.sp-signal-sell  .sp-signal-header { background: rgba(239, 83,80,.2);  color: #ef5350; }
+
+.sp-signal-body { padding: 8px 12px; }
+
+.sp-sig-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 0; border-bottom: 1px solid #21262d; font-size: .75rem;
+}
+.sp-sig-row span  { color: #8b949e; }
+.sp-sig-row strong { font-family: Consolas,monospace; color: #e6edf3; }
+
+.sp-sig-reason {
+    margin-top: 7px; font-size: .7rem; color: #8b949e;
+    line-height: 1.5; font-style: italic;
+}
+
+/* ── Responsive: stack on small screens ──────────────────────────── */
+@media (max-width: 768px) {
+    .nifty-main-layout { flex-direction: column; height: auto; }
+    .nifty-chart-col   { height: 420px; }
+    .signal-panel      { width: 100%; max-height: 420px; border-left: none; border-top: 1px solid #30363d; }
+}
