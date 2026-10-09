@@ -57,6 +57,20 @@ namespace Test.Models.Signal
         [JsonPropertyName("prevDayLowerWick")]
         public double PrevDayLowerWick { get; set; }
 
+        // ── Opening Range ─────────────────────────────────────────────────────
+
+        /// <summary>Today's Opening Range High (first N minutes). 0 until OR period ends.</summary>
+        [JsonPropertyName("openingRangeHigh")]
+        public double OpeningRangeHigh { get; set; }
+
+        /// <summary>Today's Opening Range Low (first N minutes). 0 until OR period ends.</summary>
+        [JsonPropertyName("openingRangeLow")]
+        public double OpeningRangeLow { get; set; }
+
+        /// <summary>True once the OR period is complete and ORH/ORL are active sweep levels.</summary>
+        [JsonPropertyName("openingRangeReady")]
+        public bool OpeningRangeReady { get; set; }
+
         /// <summary>Current state of the signal engine state machine.</summary>
         [JsonPropertyName("signalState")]
         public string SignalState { get; set; } = "WaitingForBias";
@@ -88,6 +102,10 @@ namespace Test.Models.Signal
         /// <summary>The active BUY or SELL signal; null if none yet.</summary>
         [JsonPropertyName("activeSignal")]
         public TradingSignal? ActiveSignal { get; set; }
+
+        /// <summary>All signals generated today (chronological order).</summary>
+        [JsonPropertyName("allSignalsToday")]
+        public List<TradingSignal> AllSignalsToday { get; set; } = new();
 
         /// <summary>
         /// Chart markers for the current session — sweep, confirmation, buy, sell.

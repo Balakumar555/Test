@@ -15,6 +15,8 @@ const COLOR_DOWN  = '#ef5350';
 const COLOR_PDH   = '#ef5350';
 const COLOR_PDL   = '#26a69a';
 const COLOR_PDC   = '#ffc107';
+const COLOR_ORH   = '#a78bfa';   // purple  – Opening Range High
+const COLOR_ORL   = '#60a5fa';   // blue    – Opening Range Low
 const COLOR_BG    = '#16181f';
 const COLOR_GRID  = 'rgba(255,255,255,0.06)';
 const COLOR_TEXT  = '#aaaaaa';
@@ -133,6 +135,12 @@ function updateChart(data) {
     updatePriceLine('pdc', data.previousDayClose, COLOR_PDC, 'PDC',  LightweightCharts.LineStyle.Dashed);
     updatePriceLine('pdl', data.previousDayLow,   COLOR_PDL, 'PDL',  LightweightCharts.LineStyle.Solid);
 
+    // ORH / ORL lines — only once Opening Range period is locked
+    if (data.openingRangeReady) {
+        updatePriceLine('orh', data.openingRangeHigh, COLOR_ORH, 'ORH', LightweightCharts.LineStyle.Dashed);
+        updatePriceLine('orl', data.openingRangeLow,  COLOR_ORL, 'ORL', LightweightCharts.LineStyle.Dashed);
+    }
+
     // Chart markers (sweep / confirmation / buy / sell)
     updateMarkers(data.markers || []);
 
@@ -188,6 +196,19 @@ function updateSignalPanel(data) {
     setText('spPDH', fmt(data.previousDayHigh));
     setText('spPDC', fmt(data.previousDayClose));
     setText('spPDL', fmt(data.previousDayLow));
+
+    // Opening Range levels (show section once OR is ready)
+    const orSection = document.getElementById('spORSection');
+    const orLegend  = document.getElementById('orLegend');
+    if (data.openingRangeReady) {
+        setText('spORH', fmt(data.openingRangeHigh));
+        setText('spORL', fmt(data.openingRangeLow));
+        if (orSection) orSection.style.display = '';
+        if (orLegend)  orLegend.style.display  = '';
+    } else {
+        if (orSection) orSection.style.display = 'none';
+        if (orLegend)  orLegend.style.display  = 'none';
+    }
 
     // Status
     setText('spStatus',   data.statusMessage  || '—');

@@ -93,6 +93,10 @@
             <span class="legend-item"><span class="legend-line pdh-line-swatch"></span>PDH</span>
             <span class="legend-item"><span class="legend-line pdc-line-swatch"></span>PDC</span>
             <span class="legend-item"><span class="legend-line pdl-line-swatch"></span>PDL</span>
+            <span id="orLegend" style="display:none">
+                <span class="legend-item"><span class="legend-line orh-line-swatch"></span>ORH</span>
+                <span class="legend-item"><span class="legend-line orl-line-swatch"></span>ORL</span>
+            </span>
             <span class="legend-item legend-hint">Scroll to zoom &middot; Drag to pan</span>
         </div>
     </div>
@@ -128,6 +132,20 @@
             <div class="sp-level-row">
                 <span class="sp-level-tag pdl-tag">PDL</span>
                 <span id="spPDL" class="sp-level-px">—</span>
+            </div>
+            <!-- Opening Range levels (shown once OR period is locked) -->
+            <div id="spORSection" style="display:none;">
+                <div class="sp-wick-row" style="margin-top:6px;opacity:0.6;font-size:0.7rem;">
+                    <span>Opening Range (09:15–09:30)</span>
+                </div>
+                <div class="sp-level-row">
+                    <span class="sp-level-tag orh-tag">ORH</span>
+                    <span id="spORH" class="sp-level-px">—</span>
+                </div>
+                <div class="sp-level-row">
+                    <span class="sp-level-tag orl-tag">ORL</span>
+                    <span id="spORL" class="sp-level-px">—</span>
+                </div>
             </div>
         </div>
 

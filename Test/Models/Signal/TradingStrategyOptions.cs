@@ -39,5 +39,11 @@ namespace Test.Models.Signal
 
         /// <summary>NSE regular-session close time in IST (HH:mm). Default "15:10".</summary>
         public string MarketEndTime { get; set; } = "15:10";
+
+        /// <summary>
+        /// Duration of the Opening Range period in minutes, measured from MarketStartTime.
+        /// ORH/ORL are locked after this many minutes.  Default 15 min (09:15 → 09:30).
+        /// </summary>
+        public int OpeningRangeMinutes { get; set; } = 15;
     }
 }

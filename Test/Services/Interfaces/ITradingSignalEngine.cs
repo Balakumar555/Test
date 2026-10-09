@@ -45,5 +45,8 @@ namespace Test.Services.Interfaces
 
         /// <summary>Number of signals generated today.</summary>
         int SignalsToday { get; }
+
+        /// <summary>All BUY / SELL signals generated today (in chronological order).</summary>
+        IReadOnlyList<TradingSignal> TodaySignals { get; }
     }
 }
