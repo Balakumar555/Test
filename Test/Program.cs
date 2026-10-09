@@ -37,6 +37,9 @@ builder.Services.AddScoped<INiftyDailyBiasService, NiftyDailyBiasService>();
 // Singleton: persists state across all HTTP requests for the lifetime of the app
 builder.Services.AddSingleton<ITradingSignalEngine, TradingSignalEngine>();
 
+// Singleton: accumulates daily signal history (up to 30 trading days in memory)
+builder.Services.AddSingleton<ISignalHistoryService, SignalHistoryService>();
+
 // ── Build & Configure pipeline ───────────────────────────────────────────────
 var app = builder.Build();
 

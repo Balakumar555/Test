@@ -40,5 +40,8 @@ namespace Test.Models.Signal
 
         /// <summary>Human-readable reason string for the signal panel.</summary>
         public string Reason { get; init; } = string.Empty;
+
+        /// <summary>IST calendar date this signal belongs to (yyyy-MM-dd).</summary>
+        public string TradingDate { get; init; } = string.Empty;
     }
 }

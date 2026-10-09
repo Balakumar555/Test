@@ -32,5 +32,16 @@ namespace Test.Models.Signal
 
         /// <summary>True when all levels are populated.</summary>
         public bool IsValid => PDH > 0 && PDL > 0 && PDC > 0;
+
+        // ── Opening Range (today's first N minutes) ───────────────────────────
+
+        /// <summary>Opening Range High — highest High of the first N minutes today (09:15 → 09:30 by default).</summary>
+        public double ORH { get; init; }
+
+        /// <summary>Opening Range Low — lowest Low of the first N minutes today.</summary>
+        public double ORL { get; init; }
+
+        /// <summary>True once the Opening Range period has closed and ORH/ORL are locked.</summary>
+        public bool OpeningRangeReady { get; init; }
     }
 }

@@ -116,6 +116,8 @@ footer.footer { background: #161b22 !important; border-top: 1px solid #30363d !i
 .pdh-line-swatch { background: #ef5350; }
 .pdc-line-swatch { background: #ffc107; }
 .pdl-line-swatch { background: #26a69a; }
+.orh-line-swatch { background: #a78bfa; }
+.orl-line-swatch { background: #60a5fa; }
 .legend-hint   { color: #555e6d; }
 
 /* ── Signal panel ────────────────────────────────────────────────── */
@@ -164,6 +166,8 @@ footer.footer { background: #161b22 !important; border-top: 1px solid #30363d !i
 .pdh-tag { background: rgba(239, 83,80,.2); color: #ef5350; border: 1px solid #ef5350; }
 .pdc-tag { background: rgba(255,193, 7,.15); color: #ffc107; border: 1px solid #ffc107; }
 .pdl-tag { background: rgba(38,166,154,.2); color: #26a69a; border: 1px solid #26a69a; }
+.orh-tag { background: rgba(167,139,250,.2); color: #a78bfa; border: 1px solid #a78bfa; }
+.orl-tag { background: rgba(96,165,250,.2);  color: #60a5fa; border: 1px solid #60a5fa; }
 .sp-level-px { font-family: Consolas,monospace; font-size: .9rem; font-weight: 600; color: #e6edf3; }
 
 /* Status */

@@ -48,6 +48,7 @@ namespace Test.Services
         // ── Dependencies ──────────────────────────────────────────────────────
         private readonly TradingStrategyOptions _opts;
         private readonly ILogger<TradingSignalEngine> _logger;
+        private readonly ISignalHistoryService _history;
 
         private static readonly TimeSpan IstOffset = TimeSpan.FromHours(5.5);
 
@@ -77,6 +78,9 @@ namespace Test.Services
         // Accumulated markers for the session
         private readonly List<ChartMarker> _markers = new();
 
+        // All signals generated today (for history archival)
+        private readonly List<TradingSignal> _todaySignals = new();
+
         // Signal + UI strings
         private TradingSignal? _activeSignal;
         private string _statusMessage = "Initialising…";
@@ -88,6 +92,7 @@ namespace Test.Services
         public SignalEngineState CurrentState  { get { lock (_lock) return _state; } }
         public TradingSignal?    ActiveSignal  { get { lock (_lock) return _activeSignal; } }
         public IReadOnlyList<ChartMarker> Markers { get { lock (_lock) return _markers.AsReadOnly(); } }
+        public IReadOnlyList<TradingSignal> TodaySignals { get { lock (_lock) return _todaySignals.AsReadOnly(); } }
         public string StatusMessage  { get { lock (_lock) return _statusMessage; } }
         public string NextCondition  { get { lock (_lock) return _nextCondition; } }
         public string LastEvent      { get { lock (_lock) return _lastEvent; } }
@@ -96,10 +101,12 @@ namespace Test.Services
 
         public TradingSignalEngine(
             IOptions<TradingStrategyOptions> opts,
+            ISignalHistoryService history,
             ILogger<TradingSignalEngine> logger)
         {
-            _opts   = opts.Value;
-            _logger = logger;
+            _opts    = opts.Value;
+            _history = history;
+            _logger  = logger;
         }
 
         /// <inheritdoc/>
@@ -143,6 +150,11 @@ namespace Test.Services
                     .Where(c =>
                     {
                         if (!TryParseIst(c.Time, out var ist)) return false;
+                        // ── Critical: only accept candles that belong to TODAY (IST) ──
+                        // Prevents yesterday's candles from being processed when the
+                        // Groww API hasn't yet returned today's data (e.g. first few
+                        // minutes after market open).
+                        if (DateOnly.FromDateTime(ist.DateTime) != todayIst) return false;
                         var t = TimeOnly.FromTimeSpan(ist.TimeOfDay);
                         return t >= marketStart && t <= marketEnd;
                     })
@@ -253,10 +265,17 @@ namespace Test.Services
         {
             double tol = _opts.SweepTolerancePoints;
 
-            // Check all three levels
+            // Check Previous Day levels
             var sweepLevel = CheckSweepDown(candle, levels.PDH, tol, "PDH")
                           ?? CheckSweepDown(candle, levels.PDC, tol, "PDC")
                           ?? CheckSweepDown(candle, levels.PDL, tol, "PDL");
+
+            // Check Opening Range levels (only once OR period has locked)
+            if (sweepLevel == null && levels.OpeningRangeReady)
+            {
+                sweepLevel = CheckSweepDown(candle, levels.ORL, tol, "ORL")
+                          ?? CheckSweepDown(candle, levels.ORH, tol, "ORH");
+            }
 
             if (sweepLevel == null) return;
 
@@ -348,9 +367,11 @@ namespace Test.Services
                 ConfirmationHigh   = _confirmHigh,
                 ConfirmationLow    = _confirmLow,
                 ConfirmationTime   = _confirmTime,
-                Reason             = $"Bullish liquidity sweep on {_sweepLevel} + green candle high breakout"
+                Reason             = $"Bullish liquidity sweep on {_sweepLevel} + green candle high breakout",
+                TradingDate        = _tradingDate.ToString("yyyy-MM-dd")
             };
 
+            _todaySignals.Add(_activeSignal);
             _signalsToday++;
             _state         = SignalEngineState.BuySignal;
             _lastEvent     = $"BUY triggered at {entryPx:F2}";
@@ -371,9 +392,17 @@ namespace Test.Services
         {
             double tol = _opts.SweepTolerancePoints;
 
+            // Check Previous Day levels
             var sweepLevel = CheckSweepUp(candle, levels.PDH, tol, "PDH")
                           ?? CheckSweepUp(candle, levels.PDC, tol, "PDC")
                           ?? CheckSweepUp(candle, levels.PDL, tol, "PDL");
+
+            // Check Opening Range levels (only once OR period has locked)
+            if (sweepLevel == null && levels.OpeningRangeReady)
+            {
+                sweepLevel = CheckSweepUp(candle, levels.ORH, tol, "ORH")
+                          ?? CheckSweepUp(candle, levels.ORL, tol, "ORL");
+            }
 
             if (sweepLevel == null) return;
 
@@ -463,9 +492,11 @@ namespace Test.Services
                 ConfirmationHigh   = _confirmHigh,
                 ConfirmationLow    = _confirmLow,
                 ConfirmationTime   = _confirmTime,
-                Reason             = $"Bearish liquidity sweep on {_sweepLevel} + red candle low breakdown"
+                Reason             = $"Bearish liquidity sweep on {_sweepLevel} + red candle low breakdown",
+                TradingDate        = _tradingDate.ToString("yyyy-MM-dd")
             };
 
+            _todaySignals.Add(_activeSignal);
             _signalsToday++;
             _state         = SignalEngineState.SellSignal;
             _lastEvent     = $"SELL triggered at {entryPx:F2}";
@@ -548,11 +579,20 @@ namespace Test.Services
         // ─────────────────────────────────────────────────────────────────────
         private void ResetForNewDay(DateOnly today)
         {
+            // ── Archive yesterday's signals before clearing ───────────────────
+            if (_tradingDate != default && _todaySignals.Count > 0)
+            {
+                _history.Archive(_tradingDate.ToString("yyyy-MM-dd"), _todaySignals.AsReadOnly());
+                _logger.LogInformation(
+                    "Archived {Count} signal(s) for {Date}.", _todaySignals.Count, _tradingDate);
+            }
+
             _tradingDate            = today;
             _state                  = SignalEngineState.WaitingForBias;
             _lastProcessedTimestamp = 0;
             _signalsToday           = 0;
             _markers.Clear();
+            _todaySignals.Clear();
             _activeSignal   = null;
             _sweepLevel     = string.Empty;
             _statusMessage  = "New trading day — determining bias…";
