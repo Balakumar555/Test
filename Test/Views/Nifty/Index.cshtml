@@ -61,6 +61,44 @@
         <span class="stat-label">Signals Today</span>
         <span class="stat-value" id="statSignals">0 / 3</span>
     </div>
+    <div class="stat-divider d-none d-md-block"></div>
+    <div class="stat-card">
+        <span class="stat-label">Paper P&amp;L</span>
+        <span class="stat-value" id="statPnl">—</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Signal info strip  (bias · state · last event · active signal)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="signal-strip">
+    <div class="ss-item">
+        <span class="ss-label">BIAS</span>
+        <span id="ssBias" class="ss-val ss-bias-neutral">NEUTRAL</span>
+    </div>
+    <div class="ss-sep"></div>
+    <div class="ss-item">
+        <span class="ss-label">STATE</span>
+        <span id="ssState" class="ss-val">Initialising…</span>
+    </div>
+    <div class="ss-sep"></div>
+    <div class="ss-item ss-item-wide">
+        <span class="ss-label">LAST EVENT</span>
+        <span id="ssLastEvent" class="ss-val">—</span>
+        <span id="ssLastEventTime" class="ss-val-sub"></span>
+    </div>
+    <div class="ss-sep"></div>
+    <div class="ss-item">
+        <span class="ss-label">NEXT</span>
+        <span id="ssNextCond" class="ss-val ss-next">—</span>
+    </div>
+    <div id="ssSignalWrap" class="ss-sep-signal d-none">
+        <div class="ss-sep"></div>
+        <div class="ss-item">
+            <span id="ssSignalBadge" class="ss-signal-badge">—</span>
+            <span id="ssSignalEntry" class="ss-val-sub"></span>
+        </div>
+    </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -71,12 +109,16 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     Main two-column layout: chart | signal panel
+     Main two-chart layout: NIFTY 50 (left) | Option Premium (right)
      ═══════════════════════════════════════════════════════════════ -->
 <div class="nifty-main-layout">
 
-    <!-- ── Left: Chart ────────────────────────────────────────── -->
+    <!-- ── Left: NIFTY 50 Candlestick Chart ───────────────────── -->
     <div class="nifty-chart-col">
+        <div class="chart-col-header">
+            <span class="chart-col-title">NIFTY 50 — Index</span>
+            <span class="chart-col-sub">Candlestick · 1-min</span>
+        </div>
         <div class="nifty-chart-wrapper">
             <div id="chartLoading" class="chart-loading">
                 <div class="spinner-border" style="color:#26a69a;" role="status">
@@ -101,77 +143,110 @@
         </div>
     </div>
 
-    <!-- ── Right: Signal Panel ────────────────────────────────── -->
-    <div class="signal-panel" id="signalPanel">
-
-        <!-- Section: Bias + Wick info -->
-        <div class="sp-section">
-            <div class="sp-title">DAILY BIAS</div>
-            <div id="spBias" class="sp-bias-neutral">NEUTRAL</div>
-            <div class="sp-wick-row">
-                <span class="sp-wick-label">Upper Wick</span>
-                <span id="spUpperWick" class="sp-wick-val">—</span>
-            </div>
-            <div class="sp-wick-row">
-                <span class="sp-wick-label">Lower Wick</span>
-                <span id="spLowerWick" class="sp-wick-val">—</span>
-            </div>
+    <!-- ── Right: Option Premium Chart ────────────────────────── -->
+    <div class="option-chart-col">
+        <div class="chart-col-header">
+            <span class="chart-col-title" id="optChartTitle">Option Premium</span>
+            <span class="chart-col-sub" id="optChartSymbol">Waiting for signal…</span>
         </div>
 
-        <!-- Section: Key levels -->
-        <div class="sp-section">
-            <div class="sp-title">KEY LEVELS</div>
-            <div class="sp-level-row">
-                <span class="sp-level-tag pdh-tag">PDH</span>
-                <span id="spPDH" class="sp-level-px">—</span>
+        <!-- Trade info strip -->
+        <div id="optTradeInfo" class="opt-trade-strip" style="display:none;">
+            <div class="opt-trade-item">
+                <span class="opt-trade-label">Entry ₹</span>
+                <span id="optEntry" class="opt-trade-val">—</span>
             </div>
-            <div class="sp-level-row">
-                <span class="sp-level-tag pdc-tag">PDC</span>
-                <span id="spPDC" class="sp-level-px">—</span>
+            <div class="opt-vdiv"></div>
+            <div class="opt-trade-item">
+                <span class="opt-trade-label">Current ₹</span>
+                <span id="optCurrent" class="opt-trade-val">—</span>
             </div>
-            <div class="sp-level-row">
-                <span class="sp-level-tag pdl-tag">PDL</span>
-                <span id="spPDL" class="sp-level-px">—</span>
+            <div class="opt-vdiv"></div>
+            <div class="opt-trade-item">
+                <span class="opt-trade-label">P&amp;L (×65)</span>
+                <span id="optPnl" class="opt-trade-val">—</span>
             </div>
-            <!-- Opening Range levels (shown once OR period is locked) -->
-            <div id="spORSection" style="display:none;">
-                <div class="sp-wick-row" style="margin-top:6px;opacity:0.6;font-size:0.7rem;">
-                    <span>Opening Range (09:15–09:30)</span>
+            <div class="opt-vdiv"></div>
+            <div class="opt-trade-item">
+                <span class="opt-trade-label">Status</span>
+                <span id="optStatus" class="opt-trade-val">—</span>
+            </div>
+            <div class="opt-vdiv"></div>
+            <div class="opt-trade-item opt-trade-item-wide">
+                <span id="optSL" class="opt-sl-badge">—</span>
+            </div>
+        </div>
+        <!-- Exit reason + meta info -->
+        <div class="opt-meta-strip">
+            <span id="optTradeId" class="opt-meta-item"></span>
+            <span id="optConfirmTime" class="opt-meta-item"></span>
+            <span id="optExitReason" class="opt-meta-item opt-exit-reason" style="display:none;"></span>
+        </div>
+
+        <div class="option-chart-wrapper">
+            <!-- Placeholder: shown until a signal fires -->
+            <div id="optChartPlaceholder" class="opt-placeholder">
+                <div class="opt-placeholder-icon">📊</div>
+                <div class="opt-placeholder-msg">Waiting for signal…</div>
+                <div class="opt-placeholder-sub">
+                    When a BUY or SELL fires on the index,<br>
+                    the corresponding option premium chart appears here.
                 </div>
-                <div class="sp-level-row">
-                    <span class="sp-level-tag orh-tag">ORH</span>
-                    <span id="spORH" class="sp-level-px">—</span>
-                </div>
-                <div class="sp-level-row">
-                    <span class="sp-level-tag orl-tag">ORL</span>
-                    <span id="spORL" class="sp-level-px">—</span>
+                <div class="opt-placeholder-rule">
+                    <span class="opt-rule-item">🟢 BUY → short PUT (ATM−100)</span>
+                    <span class="opt-rule-item">🔴 SELL → short CALL (ATM+100)</span>
                 </div>
             </div>
+            <!-- TradingView chart: hidden until signal -->
+            <div id="optChartContainer" style="width:100%;height:100%;display:none;"></div>
         </div>
-
-        <!-- Section: Signal status (state machine) -->
-        <div class="sp-section">
-            <div class="sp-title">SIGNAL STATUS</div>
-            <div id="spStatus" class="sp-status-msg">Initialising…</div>
-            <div id="spNextCond" class="sp-next-cond"></div>
-        </div>
-
-        <!-- Section: Last event -->
-        <div class="sp-section">
-            <div class="sp-title">LAST EVENT</div>
-            <div id="spLastEvent" class="sp-last-event">—</div>
-            <div id="spLastEventTime" class="sp-last-event-time"></div>
-        </div>
-
-        <!-- Section: Active signal card (hidden until signal fires) -->
-        <div id="spSignalCard" class="sp-signal-card sp-signal-none">
-            <div id="spSignalCardHeader" class="sp-signal-header">NO SIGNAL YET</div>
-            <div id="spSignalCardBody" class="sp-signal-body"></div>
-        </div>
-
-    </div><!-- /signal-panel -->
+    </div>
 
 </div><!-- /nifty-main-layout -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Paper Trading — Day-wise P&L
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="pnl-section">
+    <div class="pnl-header">
+        <div class="pnl-header-left">
+            <span class="pnl-title">📋 PAPER TRADING — DAY-WISE P&amp;L</span>
+            <span class="pnl-subtitle">Short option strategy · NIFTY lot size 65 · Simulated only</span>
+        </div>
+        <div class="pnl-header-right">
+            <span class="pnl-grand-label">Total P&amp;L</span>
+            <span id="pnlGrandTotal" class="pnl-grand-total">₹ —</span>
+        </div>
+    </div>
+
+    <div id="pnlLoading" class="pnl-loading">
+        <div class="spinner-border spinner-border-sm" style="color:#26a69a;"></div>
+        <span style="margin-left:8px;color:#8b949e;">Loading trades…</span>
+    </div>
+    <div id="pnlEmpty" class="pnl-empty d-none">
+        No trades yet. Waiting for a signal to fire…
+    </div>
+
+    <div id="pnlTableWrap" class="pnl-table-wrap d-none">
+        <table class="pnl-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Entry Time</th>
+                    <th>Symbol</th>
+                    <th>Type</th>
+                    <th>NIFTY SL</th>
+                    <th class="text-end">Entry ₹</th>
+                    <th class="text-end">Exit/Current ₹</th>
+                    <th class="text-end">P&amp;L ₹</th>
+                    <th>Status</th>
+                    <th>Exit Time</th>
+                </tr>
+            </thead>
+            <tbody id="pnlBody"></tbody>
+        </table>
+    </div>
+</div>
 
 @section Scripts {
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>

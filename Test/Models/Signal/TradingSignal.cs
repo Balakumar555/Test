@@ -38,10 +38,32 @@ namespace Test.Models.Signal
         /// <summary>IST time the confirmation candle closed.</summary>
         public string ConfirmationTime { get; init; } = string.Empty;
 
+        // ── Sweep candle (the first candle that swept the liquidity level) ──────
+
+        /// <summary>
+        /// High of the sweep candle (bullish path: typically the red candle that swept below the level).
+        /// Used as the stop-loss reference for BUY signals (short PUT):
+        /// if NIFTY falls back to/below this level the bullish thesis is invalidated.
+        /// </summary>
+        public double SweepCandleHigh { get; init; }
+
+        /// <summary>
+        /// Low of the sweep candle (bearish path: typically the green candle that swept above).
+        /// Stored for reference; SELL SL uses ConfirmationHigh instead.
+        /// </summary>
+        public double SweepCandleLow { get; init; }
+
         /// <summary>Human-readable reason string for the signal panel.</summary>
         public string Reason { get; init; } = string.Empty;
 
         /// <summary>IST calendar date this signal belongs to (yyyy-MM-dd).</summary>
         public string TradingDate { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Fake-UTC Unix seconds of the sweep candle (same convention as TimestampSeconds).
+        /// Used to look up the option's candle HIGH at sweep time → that becomes the
+        /// initial SL premium drawn as a red line on the option chart.
+        /// </summary>
+        public long SweepTimestampSeconds { get; init; }
     }
 }

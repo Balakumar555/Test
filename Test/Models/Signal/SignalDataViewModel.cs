@@ -113,6 +113,21 @@ namespace Test.Models.Signal
         /// </summary>
         [JsonPropertyName("markers")]
         public List<ChartMarker> Markers { get; set; } = new();
+
+        // ── Paper trading ──────────────────────────────────────────────────────
+
+        /// <summary>
+        /// The option symbol to paper-trade based on the active signal.
+        /// BUY → short PUT 2 strikes OTM (ATM-100 PE).
+        /// SELL → short CALL 2 strikes OTM (ATM+100 CE).
+        /// Null when no active signal exists.
+        /// </summary>
+        [JsonPropertyName("optionSymbol")]
+        public string? OptionSymbol { get; set; }
+
+        /// <summary>The currently open paper trade, or null.</summary>
+        [JsonPropertyName("activePaperTrade")]
+        public PaperTrade? ActivePaperTrade { get; set; }
     }
 
     /// <summary>A single annotation marker on the TradingView Lightweight Chart.</summary>
