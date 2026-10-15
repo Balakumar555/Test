@@ -1,8 +1,8 @@
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Test.Models.Dto;
 using Test.Models.Options;
 using Test.Services.Interfaces;
 
@@ -27,6 +27,9 @@ namespace Test.Services
 
         private const string FnoUrl =
             "https://groww.in/v1/api/stocks_fo_data/v1/tr_live_prices/exchange/NSE/segment/FNO/latest_prices_batch";
+
+        private const string FnoChartBaseUrl =
+            "https://groww.in/v1/api/stocks_fo_data/v1/charting_service/delayed/chart/exchange/NSE/segment/FNO";
 
         public NiftyOptionService(
             IHttpClientFactory httpFactory,
@@ -140,6 +143,86 @@ namespace Test.Services
             {
                 _logger.LogError(ex, "Error fetching option chain.");
                 return Error("Unexpected error fetching option chain.");
+            }
+        }
+
+        // ── New methods ───────────────────────────────────────────────────────
+
+        /// <inheritdoc/>
+        public async Task<List<OptionCandleDto>> GetOptionChartAsync(string symbol, long startMs, long endMs)
+        {
+            try
+            {
+                var client = _httpFactory.CreateClient("GrowwClient");
+                var url = $"{FnoChartBaseUrl}/{symbol}" +
+                          $"?endTimeInMillis={endMs}&intervalInMinutes=1&startTimeInMillis={startMs}";
+
+                _logger.LogInformation("Fetching option chart: {Url}", url);
+
+                var response = await client.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Option chart API returned {Status}", response.StatusCode);
+                    return new List<OptionCandleDto>();
+                }
+
+                var rawJson = await response.Content.ReadAsStringAsync();
+                var opts    = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var dto     = JsonSerializer.Deserialize<GrowwChartResponseDto>(rawJson, opts);
+
+                if (dto?.Candles == null || dto.Candles.Length == 0)
+                    return new List<OptionCandleDto>();
+
+                var result = new List<OptionCandleDto>(dto.Candles.Length);
+                foreach (var row in dto.Candles)
+                {
+                    if (row == null || row.Length < 5 || row[0] == null) continue;
+
+                    long unixSec = (long)row[0]!.Value;
+                    var istTime  = DateTimeOffset.FromUnixTimeSeconds(unixSec).ToOffset(IstOffset);
+
+                    result.Add(new OptionCandleDto
+                    {
+                        Time   = istTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                        Open   = row[1] ?? 0,
+                        High   = row[2] ?? 0,
+                        Low    = row[3] ?? 0,
+                        Close  = row[4] ?? 0,
+                        Volume = row.Length > 5 ? (row[5] ?? 0) : 0
+                    });
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching option chart for {Symbol}", symbol);
+                return new List<OptionCandleDto>();
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<double> GetSingleOptionPriceAsync(string symbol)
+        {
+            try
+            {
+                var client  = _httpFactory.CreateClient("GrowwClient");
+                var payload = JsonSerializer.Serialize(new[] { symbol });
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync(FnoUrl, content);
+                if (!response.IsSuccessStatusCode) return 0;
+
+                var rawJson  = await response.Content.ReadAsStringAsync();
+                var priceMap = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(rawJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (priceMap == null || !priceMap.ContainsKey(symbol)) return 0;
+                return GetDouble(priceMap[symbol], "ltp");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching single option price for {Symbol}", symbol);
+                return 0;
             }
         }
 

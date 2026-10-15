@@ -41,7 +41,10 @@ builder.Services.AddSingleton<ITradingSignalEngine, TradingSignalEngine>();
 // Singleton: accumulates daily signal history (up to 30 trading days in memory)
 builder.Services.AddSingleton<ISignalHistoryService, SignalHistoryService>();
 
-// ── Option chain options + service ────────────────────────────────────────────
+// Singleton: paper trading — tracks simulated option-selling trades in memory
+builder.Services.AddSingleton<IPaperTradingService, PaperTradingService>();
+
+// ── Option chain / option service options + service ───────────────────────────
 builder.Services.Configure<OptionChainOptions>(
     builder.Configuration.GetSection(OptionChainOptions.SectionName));
 builder.Services.AddScoped<INiftyOptionService, NiftyOptionService>();

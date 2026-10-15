@@ -65,6 +65,9 @@ namespace Test.Services
         private string  _sweepLevel    = string.Empty;   // "PDH","PDC","PDL"
         private double  _sweepLevelPx;                   // price of the swept level
         private double  _sweepExtreme;                   // lowest Low (bullish) / highest High (bearish)
+        private double  _sweepCandleHigh;                // High of the sweep candle (for BUY SL)
+        private double  _sweepCandleLow;                 // Low  of the sweep candle (for reference)
+        private long    _sweepTimestampFakeUtc;          // fake-UTC seconds of sweep candle (for option SL lookup)
         private string  _sweepTime     = string.Empty;
         private DateTimeOffset _sweepTimestamp;          // used for expiry checks
 
@@ -279,13 +282,17 @@ namespace Test.Services
 
             if (sweepLevel == null) return;
 
-            _sweepLevel     = sweepLevel.Value.name;
-            _sweepLevelPx   = sweepLevel.Value.levelPrice;
-            _sweepExtreme   = candle.Low;
-            _sweepTime      = candleIst.ToString("HH:mm:ss");
-            _sweepTimestamp = candleIst;
+            _sweepLevel              = sweepLevel.Value.name;
+            _sweepLevelPx            = sweepLevel.Value.levelPrice;
+            _sweepExtreme            = candle.Low;
+            _sweepCandleHigh         = candle.High;
+            _sweepCandleLow          = candle.Low;
+            _sweepTime               = candleIst.ToString("HH:mm:ss");
+            _sweepTimestamp          = candleIst;
 
             var timeSecFake = ToDisplaySeconds(candle.Time);
+            _sweepTimestampFakeUtc   = timeSecFake;   // stored for option SL premium lookup
+
             if (timeSecFake > 0)
                 _markers.Add(new ChartMarker
                 {
@@ -357,18 +364,21 @@ namespace Test.Services
 
             _activeSignal = new TradingSignal
             {
-                Type               = SignalType.Buy,
-                EntryPrice         = entryPx,
-                Time               = timeStr,
-                TimestampSeconds   = timeSecFake,
-                LiquidityLevel     = _sweepLevel,
-                SweepPrice         = _sweepExtreme,
-                SweepTime          = _sweepTime,
-                ConfirmationHigh   = _confirmHigh,
-                ConfirmationLow    = _confirmLow,
-                ConfirmationTime   = _confirmTime,
-                Reason             = $"Bullish liquidity sweep on {_sweepLevel} + green candle high breakout",
-                TradingDate        = _tradingDate.ToString("yyyy-MM-dd")
+                Type                   = SignalType.Buy,
+                EntryPrice             = entryPx,
+                Time                   = timeStr,
+                TimestampSeconds       = timeSecFake,
+                LiquidityLevel         = _sweepLevel,
+                SweepPrice             = _sweepExtreme,
+                SweepTime              = _sweepTime,
+                SweepTimestampSeconds  = _sweepTimestampFakeUtc,
+                SweepCandleHigh        = _sweepCandleHigh,
+                SweepCandleLow         = _sweepCandleLow,
+                ConfirmationHigh       = _confirmHigh,
+                ConfirmationLow        = _confirmLow,
+                ConfirmationTime       = _confirmTime,
+                Reason                 = $"Bullish liquidity sweep on {_sweepLevel} + green candle high breakout",
+                TradingDate            = _tradingDate.ToString("yyyy-MM-dd")
             };
 
             _todaySignals.Add(_activeSignal);
@@ -406,13 +416,16 @@ namespace Test.Services
 
             if (sweepLevel == null) return;
 
-            _sweepLevel     = sweepLevel.Value.name;
-            _sweepLevelPx   = sweepLevel.Value.levelPrice;
-            _sweepExtreme   = candle.High;
-            _sweepTime      = candleIst.ToString("HH:mm:ss");
-            _sweepTimestamp = candleIst;
+            _sweepLevel              = sweepLevel.Value.name;
+            _sweepLevelPx            = sweepLevel.Value.levelPrice;
+            _sweepExtreme            = candle.High;
+            _sweepCandleHigh         = candle.High;
+            _sweepCandleLow          = candle.Low;
+            _sweepTime               = candleIst.ToString("HH:mm:ss");
+            _sweepTimestamp          = candleIst;
+            var timeSecFake          = ToDisplaySeconds(candle.Time);
+            _sweepTimestampFakeUtc   = timeSecFake;
 
-            var timeSecFake = ToDisplaySeconds(candle.Time);
             if (timeSecFake > 0)
                 _markers.Add(new ChartMarker
                 {
@@ -482,18 +495,21 @@ namespace Test.Services
 
             _activeSignal = new TradingSignal
             {
-                Type               = SignalType.Sell,
-                EntryPrice         = entryPx,
-                Time               = timeStr,
-                TimestampSeconds   = timeSecFake,
-                LiquidityLevel     = _sweepLevel,
-                SweepPrice         = _sweepExtreme,
-                SweepTime          = _sweepTime,
-                ConfirmationHigh   = _confirmHigh,
-                ConfirmationLow    = _confirmLow,
-                ConfirmationTime   = _confirmTime,
-                Reason             = $"Bearish liquidity sweep on {_sweepLevel} + red candle low breakdown",
-                TradingDate        = _tradingDate.ToString("yyyy-MM-dd")
+                Type                   = SignalType.Sell,
+                EntryPrice             = entryPx,
+                Time                   = timeStr,
+                TimestampSeconds       = timeSecFake,
+                LiquidityLevel         = _sweepLevel,
+                SweepPrice             = _sweepExtreme,
+                SweepTime              = _sweepTime,
+                SweepTimestampSeconds  = _sweepTimestampFakeUtc,
+                SweepCandleHigh        = _sweepCandleHigh,
+                SweepCandleLow         = _sweepCandleLow,
+                ConfirmationHigh       = _confirmHigh,
+                ConfirmationLow        = _confirmLow,
+                ConfirmationTime       = _confirmTime,
+                Reason                 = $"Bearish liquidity sweep on {_sweepLevel} + red candle low breakdown",
+                TradingDate            = _tradingDate.ToString("yyyy-MM-dd")
             };
 
             _todaySignals.Add(_activeSignal);
@@ -593,8 +609,11 @@ namespace Test.Services
             _signalsToday           = 0;
             _markers.Clear();
             _todaySignals.Clear();
-            _activeSignal   = null;
-            _sweepLevel     = string.Empty;
+            _activeSignal            = null;
+            _sweepLevel              = string.Empty;
+            _sweepCandleHigh         = 0;
+            _sweepCandleLow          = 0;
+            _sweepTimestampFakeUtc   = 0;
             _statusMessage  = "New trading day — determining bias…";
             _nextCondition  = string.Empty;
             _lastEvent      = string.Empty;
