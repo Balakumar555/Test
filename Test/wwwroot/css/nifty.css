@@ -218,3 +218,125 @@ footer.footer { background: #161b22 !important; border-top: 1px solid #30363d !i
     .nifty-chart-col   { height: 420px; }
     .signal-panel      { width: 100%; max-height: 420px; border-left: none; border-top: 1px solid #30363d; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   OPTION CHAIN
+   ══════════════════════════════════════════════════════════════════ */
+.oc-wrapper {
+    background: #161b22;
+    border-top: 2px solid #30363d;
+    padding: 0 0 20px;
+}
+
+.oc-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    border-bottom: 1px solid #21262d;
+    background: #1c2128;
+}
+
+.oc-title {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #c9d1d9;
+    text-transform: uppercase;
+}
+
+.oc-expiry-badge, .oc-atm-badge {
+    font-size: .7rem;
+    font-family: Consolas, monospace;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.oc-expiry-badge { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid #1f4a7d; }
+.oc-atm-badge    { background: rgba(240,180,41,.12); color: #f0b429; border: 1px solid #7d5a0a; }
+.oc-fetch-time   { font-size: .68rem; color: #6e7681; }
+
+.oc-loading {
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    color: #8b949e;
+    font-size: .8rem;
+}
+
+.oc-error {
+    color: #f85149;
+    background: #1f1117;
+    border: 1px solid #6e2828;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin: 10px 16px;
+    font-size: .82rem;
+}
+
+.oc-table-wrap {
+    overflow-x: auto;
+    padding: 0 4px;
+}
+
+/* Option chain table */
+.oc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .78rem;
+    font-family: Consolas, monospace;
+}
+
+.oc-table th {
+    background: #21262d;
+    color: #8b949e;
+    font-size: .62rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 7px 10px;
+    border-bottom: 1px solid #30363d;
+    white-space: nowrap;
+}
+
+.oc-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #161b22;
+    white-space: nowrap;
+    text-align: right;
+    color: #c9d1d9;
+}
+
+/* CE = calls (left, blue tint) */
+.oc-ce { background: rgba(31,111,235,.04); }
+.oc-table thead .oc-ce { color: #58a6ff; }
+
+/* PE = puts (right, red tint) */
+.oc-pe { background: rgba(239,83,80,.04); }
+.oc-table thead .oc-pe { color: #ef5350; }
+
+/* Strike column — center */
+.oc-strike {
+    background: #1c2128 !important;
+    color: #e6edf3 !important;
+    font-weight: 700;
+    text-align: center !important;
+    border-left:  1px solid #30363d;
+    border-right: 1px solid #30363d;
+    white-space: nowrap;
+}
+
+/* ATM row highlight */
+.oc-atm-row td { background-color: rgba(240,180,41,.07) !important; }
+.oc-atm-strike {
+    color: #f0b429 !important;
+    background: rgba(240,180,41,.18) !important;
+}
+
+/* LTP cells — slightly larger */
+.oc-ltp { font-size: .84rem; font-weight: 700; color: #e6edf3 !important; }
+
+/* Bull / bear colour for change cells */
+.oc-bull { color: #3fb950 !important; }
+.oc-bear { color: #f85149 !important; }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Test.Models.Options;
 using Test.Models.Signal;
 using Test.Services;
 using Test.Services.Interfaces;
@@ -39,6 +40,11 @@ builder.Services.AddSingleton<ITradingSignalEngine, TradingSignalEngine>();
 
 // Singleton: accumulates daily signal history (up to 30 trading days in memory)
 builder.Services.AddSingleton<ISignalHistoryService, SignalHistoryService>();
+
+// ── Option chain options + service ────────────────────────────────────────────
+builder.Services.Configure<OptionChainOptions>(
+    builder.Configuration.GetSection(OptionChainOptions.SectionName));
+builder.Services.AddScoped<INiftyOptionService, NiftyOptionService>();
 
 // ── Build & Configure pipeline ───────────────────────────────────────────────
 var app = builder.Build();

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Test.Models;
+using Test.Models.Options;
 using Test.Models.Signal;
 using Test.Services.Interfaces;
 
@@ -15,6 +16,7 @@ namespace Test.Controllers
         private readonly INiftyDailyBiasService _biasService;
         private readonly ITradingSignalEngine   _signalEngine;
         private readonly ISignalHistoryService  _signalHistory;
+        private readonly INiftyOptionService    _optionService;
         private readonly TradingStrategyOptions _opts;
         private readonly ILogger<NiftyController> _logger;
 
@@ -25,6 +27,7 @@ namespace Test.Controllers
             INiftyDailyBiasService biasService,
             ITradingSignalEngine   signalEngine,
             ISignalHistoryService  signalHistory,
+            INiftyOptionService    optionService,
             IOptions<TradingStrategyOptions> opts,
             ILogger<NiftyController> logger)
         {
@@ -32,6 +35,7 @@ namespace Test.Controllers
             _biasService   = biasService;
             _signalEngine  = signalEngine;
             _signalHistory = signalHistory;
+            _optionService = optionService;
             _opts          = opts.Value;
             _logger        = logger;
         }
@@ -134,6 +138,36 @@ namespace Test.Controllers
             {
                 _logger.LogError(ex, "Error in NiftyController.GetSignalHistory");
                 return Json(new { success = false, errorMessage = "Server error fetching signal history." });
+            }
+        }
+
+        /// <summary>
+        /// GET /Nifty/GetOptionChain?atm=22850
+        /// Returns live NIFTY option chain (CE + PE) for strikes around ATM.
+        /// Proxies through server to avoid CORS. Expiry + strike config from appsettings.json.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetOptionChain([FromQuery] double atm = 0)
+        {
+            try
+            {
+                // If no ATM given, use current price from market service
+                if (atm <= 0)
+                {
+                    var chart = await _marketService.GetChartDataAsync();
+                    atm = chart.Success && chart.CurrentPrice > 0 ? chart.CurrentPrice : 22500;
+                }
+                var result = await _optionService.GetOptionChainAsync(atm);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in NiftyController.GetOptionChain");
+                return Json(new OptionChainViewModel
+                {
+                    Success      = false,
+                    ErrorMessage = "Server error fetching option chain."
+                });
             }
         }
 

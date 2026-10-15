@@ -321,3 +321,105 @@ function pulseRefreshDot() {
     void dot.offsetWidth;
     dot.classList.add('dot-pulse');
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// OPTION CHAIN
+// Polls GET /Nifty/GetOptionChain every 30 s.
+// ATM is derived from the current NIFTY price obtained from signal data.
+// ═══════════════════════════════════════════════════════════════════
+
+let _latestAtm = 0;  // updated after each signal-data poll
+
+// Hook into the main refresh: after chart data arrives, fetch option chain
+const _origRefresh = refresh;
+async function refresh() {
+    await _origRefresh.apply(this, arguments);
+    await refreshOptionChain();
+}
+
+async function refreshOptionChain() {
+    const dot = document.getElementById('ocDot');
+    if (dot) { dot.classList.remove('dot-pulse'); void dot.offsetWidth; dot.classList.add('dot-pulse'); }
+
+    try {
+        const url = _latestAtm > 0
+            ? `/Nifty/GetOptionChain?atm=${_latestAtm}`
+            : '/Nifty/GetOptionChain';
+
+        const resp = await fetch(url, { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        document.getElementById('ocLoading').style.display = 'none';
+
+        if (!data.success) {
+            const errEl = document.getElementById('ocError');
+            errEl.textContent = data.errorMessage || 'Option chain unavailable.';
+            errEl.classList.remove('d-none');
+            return;
+        }
+
+        document.getElementById('ocError').classList.add('d-none');
+        document.getElementById('ocTableWrap').style.display = 'block';
+
+        // Header meta
+        setText('ocExpiry', 'Expiry: ' + (data.expiry || '—'));
+        setText('ocAtm',    'ATM: '    + fmtK(data.atmStrike));
+        setText('ocTime',   'Updated: ' + (data.fetchedAt || '—'));
+
+        renderOptionChain(data.rows || [], data.atmStrike);
+
+    } catch (err) {
+        console.error('Option chain error:', err);
+        document.getElementById('ocLoading').style.display = 'none';
+    }
+}
+
+// Hook: capture current price after each main refresh
+const _origUpdateCurrentPrice = updateCurrentPrice;
+function updateCurrentPrice(price, pdClose) {
+    _origUpdateCurrentPrice(price, pdClose);
+    if (price && price > 0) _latestAtm = price;
+}
+
+function renderOptionChain(rows, atmStrike) {
+    const tbody = document.getElementById('ocBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    rows.forEach(row => {
+        const isAtm = row.isAtm;
+        const tr = document.createElement('tr');
+        if (isAtm) tr.classList.add('oc-atm-row');
+
+        // CE OI change color
+        const ceOiCls  = row.ceOiChangePct > 0  ? 'oc-bull' : row.ceOiChangePct < 0  ? 'oc-bear' : '';
+        const peOiCls  = row.peOiChangePct > 0  ? 'oc-bull' : row.peOiChangePct < 0  ? 'oc-bear' : '';
+        const ceChgCls = row.ceChangePct   > 0  ? 'oc-bull' : row.ceChangePct   < 0  ? 'oc-bear' : '';
+        const peChgCls = row.peChangePct   > 0  ? 'oc-bull' : row.peChangePct   < 0  ? 'oc-bear' : '';
+
+        tr.innerHTML =
+            // ── CE side (calls) ───────────────────────────────────────────
+            `<td class="oc-ce ${ceOiCls}">${fmtPct(row.ceOiChangePct)}</td>` +
+            `<td class="oc-ce">${fmtOi(row.ceOi)}</td>` +
+            `<td class="oc-ce">${fmtVol(row.ceVolume)}</td>` +
+            `<td class="oc-ce ${ceChgCls}">${fmtPct(row.ceChangePct)}</td>` +
+            `<td class="oc-ce oc-ltp">${fmt(row.ceLtp)}</td>` +
+            // ── Strike ───────────────────────────────────────────────────
+            `<td class="oc-strike${isAtm ? ' oc-atm-strike' : ''}">${row.strike}</td>` +
+            // ── PE side (puts) ────────────────────────────────────────────
+            `<td class="oc-pe oc-ltp">${fmt(row.peLtp)}</td>` +
+            `<td class="oc-pe ${peChgCls}">${fmtPct(row.peChangePct)}</td>` +
+            `<td class="oc-pe">${fmtVol(row.peVolume)}</td>` +
+            `<td class="oc-pe">${fmtOi(row.peOi)}</td>` +
+            `<td class="oc-pe ${peOiCls}">${fmtPct(row.peOiChangePct)}</td>`;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// Format helpers for option chain
+function fmtPct(v)  { if (!v && v !== 0) return '—'; const s = v >= 0 ? '+' : ''; return s + v.toFixed(1) + '%'; }
+function fmtOi(v)   { if (!v) return '—'; if (v >= 1e5) return (v/1e5).toFixed(1)+'L'; if (v >= 1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(0); }
+function fmtVol(v)  { if (!v) return '—'; if (v >= 1e6) return (v/1e6).toFixed(1)+'M'; if (v >= 1e3) return (v/1e3).toFixed(0)+'K'; return v; }
+function fmtK(v)    { if (!v) return '—'; return Number(v).toLocaleString('en-IN'); }

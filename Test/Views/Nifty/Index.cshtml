@@ -173,6 +173,52 @@
 
 </div><!-- /nifty-main-layout -->
 
+<!-- ═══════════════════════════════════════════════════════════════
+     LIVE OPTION CHAIN  (full-width below chart+signal panel)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="oc-wrapper">
+    <div class="oc-header">
+        <span class="oc-title">NIFTY OPTION CHAIN</span>
+        <span id="ocExpiry" class="oc-expiry-badge">Expiry: —</span>
+        <span id="ocAtm"    class="oc-atm-badge">ATM: —</span>
+        <span id="ocTime"   class="oc-fetch-time">—</span>
+        <span class="ms-auto">
+            <span id="ocDot" class="refresh-dot"></span>
+            <span style="font-size:.68rem;color:#8b949e;">Live · auto-refresh 30s</span>
+        </span>
+    </div>
+
+    <div id="ocLoading" class="oc-loading">
+        <div class="spinner-border spinner-border-sm" style="color:#26a69a;"></div>
+        <span style="margin-left:8px;color:#8b949e;">Fetching option chain…</span>
+    </div>
+    <div id="ocError" class="oc-error d-none"></div>
+
+    <div id="ocTableWrap" class="oc-table-wrap" style="display:none;">
+        <table class="oc-table" id="ocTable">
+            <thead>
+                <tr>
+                    <!-- CE side (left) -->
+                    <th class="oc-ce">OI Chg%</th>
+                    <th class="oc-ce">OI</th>
+                    <th class="oc-ce">Vol</th>
+                    <th class="oc-ce">Chg%</th>
+                    <th class="oc-ce">LTP</th>
+                    <!-- Strike -->
+                    <th class="oc-strike">STRIKE</th>
+                    <!-- PE side (right) -->
+                    <th class="oc-pe">LTP</th>
+                    <th class="oc-pe">Chg%</th>
+                    <th class="oc-pe">Vol</th>
+                    <th class="oc-pe">OI</th>
+                    <th class="oc-pe">OI Chg%</th>
+                </tr>
+            </thead>
+            <tbody id="ocBody"></tbody>
+        </table>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
     <script src="~/js/nifty-chart.js" asp-append-version="true"></script>
